@@ -1,0 +1,38 @@
+#! /bin/sh
+
+set -e
+
+echo output should be 32 or 64
+cat /sys/firmware/efi/fw_platform_size
+#ping ping.archlinux.org #press ctrl-c after a few successful connections (this tests internet)
+timedatectl
+echo now outputting the partition structure
+fdisk -l
+echo "make sure to select the device you wish to install to (MUST BE SDx. NOT NVME OR SIMILAR!!!)"
+read -p "Enter device (eg: /dev/sda): " DEVICE
+echo altering device structure
+cat /disklabel | sfdisk ${DEVICE}
+mkfs.fat ${DEVICE}1
+mkswap ${DEVICE}2
+mkfs.ext4 ${DEVICE}3
+mount ${DEVICE}3 /mnt
+mount --mkdir ${DEVICE}1 /mnt/boot
+swapon ${DEVICE}2
+pacman-key --init
+pacman-key --populate
+mkdir -v /mnt/etc
+echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
+echo "KEYMAP=us" > /mnt/etc/vconsole.conf
+pacstrap -K /mnt --needed base linux-zen linux-firmware linux-zen-headers linux linux-headers linux-lts linux-lts-headers networkmanager amd-ucode intel-ucode btrfs-progs dosfstools exfatprogs f2fs-tools e2fsprogs jfsutils mtd-utils nilfs-utils ntfs-3g udftools xfsprogs sof-firmware linux-firmware-marvell sudo nano grub efibootmgr ark dolphin htop iwd kate konsole openssh plasma-meta plasma-workspace smartmontools wget wireless_tools xdg-utils intel-media-driver libva-intel-driver libva-mesa-driver mesa vulkan-intel vulkan-nouveau vulkan-radeon xf86-video-amdgpu xf86-video-ati xf86-video-nouveau xorg-server xorg-xinit sddm kio-admin firefox bash-completion git less base-devel python-pip python-pipx
+pacstrap -K /mnt --needed alsa-utils amd-ucode arch-install-scripts archinstall b43-fwcutter base bcachefs-tools bind bolt brltty broadcom-wl btrfs-progs clonezilla cloud-init cryptsetup darkhttpd ddrescue dhcpcd diffutils dmidecode dmraid dnsmasq dosfstools e2fsprogs edk2-shell efibootmgr espeakup ethtool exfatprogs f2fs-tools fatresize foot-terminfo fsarchiver gpart gpm gptfdisk grml-zsh-config grub hdparm hyperv intel-ucode irssi iw iwd jfsutils kitty-terminfo ldns less lftp libfido2 libusb-compat linux linux-atm linux-firmware linux-firmware-marvell livecd-sounds lsscsi lvm2 lynx man-db man-pages mc mdadm memtest86+ memtest86+-efi mkinitcpio mkinitcpio-archiso mkinitcpio-nfs-utils mmc-utils modemmanager mtools nano nbd ndisc6 nfs-utils nilfs-utils nmap ntfs-3g nvme-cli open-iscsi open-vm-tools openconnect openpgp-card-tools openssh openvpn partclone parted partimage pcsclite ppp pptpclient pv qemu-guest-agent refind reflector rsync rxvt-unicode-terminfo screen sdparm sequoia-sq sg3_utils smartmontools sof-firmware squashfs-tools sudo syslinux systemd-resolvconf tcpdump terminus-font testdisk tmux tpm2-tools tpm2-tss udftools usb_modeswitch usbmuxd usbutils vim virtualbox-guest-utils-nox vpnc wireless-regdb wireless_tools wpa_supplicant wvdial xdg-utils xfsprogs xl2tpd # packages in live installer - can safely be commented out on most systems
+genfstab -U /mnt >> /mnt/etc/fstab
+cp -v /chroot-finish /mnt
+chmod +x /mnt/chroot-finish
+arch-chroot /mnt /chroot-finish
+mv -v /sudoers.b /mnt/etc/sudoers
+rm -v /mnt/chroot-finish
+echo finishing up
+swapoff -a
+umount -R /mnt
+echo type reboot to finish
+#reboot

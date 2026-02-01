@@ -1,0 +1,4 @@
+#! /bin/sh
+
+echo "available automatic installation commands:"
+ls /usr/local/bin | grep "autoinstaller-"

@@ -1,0 +1,21 @@
+#! /bin/sh
+
+set -e
+
+ln -sfv /usr/share/zoneinfo/America/Chicago /etc/localtime
+hwclock --systohc
+locale-gen
+read -p "Enter hostname (eg: my-pc): " HOSTNAME
+echo $HOSTNAME > /etc/hostname
+systemctl enable NetworkManager
+systemctl enable sddm
+mkinitcpio -P
+echo enter new root password
+passwd
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+grub-mkconfig -o /boot/grub/grub.cfg
+read -p "Enter username (eg: archie): " USERNAME
+useradd -m $USERNAME
+echo enter password for $USERNAME
+passwd $USERNAME
+usermod -aG wheel $USERNAME
